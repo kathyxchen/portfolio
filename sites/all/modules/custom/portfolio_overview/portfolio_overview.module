@@ -16,12 +16,12 @@ function portfolio_overview_block_view($delta = '') {
 	$block = array();
 	if ($delta == 'overview') {
 		$block['subject'] = 'Portfolio at a Glance';
-		$block['content'] = portfolio_overview_output();
+		$block['content'] = portfolio_overview_output('block');
 	}
 	return $block;
 }
 
-function portfolio_overview_output() {
+function portfolio_overview_output($type) {
 	$blog_ct = db_query("SELECT COUNT(nid) FROM node WHERE type = 'blog_post'")->fetchColumn();
 	$bdg_ct = db_query("SELECT COUNT(nid) FROM node WHERE type = 'badge'")->fetchColumn();
 	$tx_ct = db_query("SELECT COUNT(tid) FROM taxonomy_term_data WHERE vid = 1")->fetchColumn();
@@ -29,9 +29,37 @@ function portfolio_overview_output() {
 
 	$output = '<h3>' . $blog_ct . ' blog posts</h3>';
 	$output .= '<h3>' . $bdg_ct . ' badges</h3>';
-	$output .= '<h3> ' . $tx_ct . ' skills in progress</h3>';
+	$output .= '<h3 id="pf-skills"> ' . $tx_ct . ' skills in progress</h3>';
+	$output .= '<div id="pf-tagcloud"></div>';
 	$output .= '<h3>' . $proj_ct . ' projects to show off</h3>';
+	if ($type == 'block') {
+		$output .= l('View More', 'portfolio');
+	}
 	return $output;
 }
 
+/**
+* Implements hook_menu()
+*/
+function portfolio_overview_menu() {
+	$items = array();
+	$items['portfolio'] = array(
+		'title' => 'Portfolio Overview',
+		'access arguments' => array('access content'),
+		'page callback' => 'portfolio_overview_page',
+	);
+	return $items;
+}
+/**
+* Implements hook_page()
+*/
+function portfolio_overview_page() {
+	$filepath = drupal_get_path('module', 'portfolio_overview');
+	$filepath .= '/portfolio_overview.js';
+	drupal_add_js($filepath);
+	$filepath = drupal_get_path('module', 'tagadelic');
+	$filepath .= '/tagadelic.css';
+	drupal_add_css($filepath);
+	return portfolio_overview_output('page');
+}
 ?>
